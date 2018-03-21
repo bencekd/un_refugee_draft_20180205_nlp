@@ -149,26 +149,6 @@ cnlp_get_token(obj)</code></pre>
 ## 10 output2.txt     1    10      ZERO      ZERO  NOUN   NNP    57
 ## # ... with 12,474 more rows</code></pre>
 <pre class="r"><code>print.data.frame(cnlp_get_dependency(obj, get_token = TRUE) %&gt;%
-  filter(relation == &quot;dobj&quot;) %&gt;%
-  select(id = id, start = lemma, word = word_target) %&gt;%
-  filter(!(word %in% c(&quot;c&quot;,&quot;b&quot;,&quot;a&quot;))) %&gt;%
-  select(start, word) %&gt;%
-  group_by(start, word) %&gt;%
-  summarise(n = n()) %&gt;%
-  filter(n &gt;= 5) %&gt;%
-  arrange(desc(n)))</code></pre>
-<pre><code>##         start               word  n
-## 1     provide             access 10
-## 2     promote operationalization  9
-## 3     provide        information  7
-## 4   establish         mechanisms  6
-## 5      create         conditions  5
-## 6     develop         agreements  5
-## 7     enhance        cooperation  5
-## 8  facilitate             access  5
-## 9     provide           migrants  5
-## 10       take              place  5</code></pre>
-<pre class="r"><code>print.data.frame(cnlp_get_dependency(obj, get_token = TRUE) %&gt;%
   filter(relation == &quot;amod&quot;) %&gt;%
   select(id = id, word = lemma, target = lemma_target) %&gt;%
   select(target, word) %&gt;%
@@ -176,6 +156,7 @@ cnlp_get_token(obj)</code></pre>
   summarise(n = n()) %&gt;%
   filter(n &gt;= 5) %&gt;%
   arrange(desc(n)))</code></pre>
+<pre><code>## Warning: package 'bindrcpp' was built under R version 3.4.2</code></pre>
 <pre><code>##           target        word  n
 ## 1         global     compact 33
 ## 2         follow      action 22
@@ -200,6 +181,58 @@ cnlp_get_token(obj)</code></pre>
 ## 21       migrant       child  5
 ## 22        social entitlement  5
 ## 23        social     service  5</code></pre>
+<pre class="r"><code>print.data.frame(cnlp_get_dependency(obj, get_token = TRUE) %&gt;%
+  filter(relation == &quot;amod&quot;) %&gt;%
+  select(id = id, word = word, target = word_target) %&gt;%
+  select(target, word) %&gt;%
+  group_by(target, word) %&gt;%
+  summarise(n = n()) %&gt;%
+  filter(n &gt;= 5) %&gt;%
+  arrange(desc(n)))</code></pre>
+<pre><code>##           target         word  n
+## 1         Global      Compact 34
+## 2      following      actions 22
+## 3  international    migration 17
+## 4          human       rights 11
+## 5  international          law 10
+## 6        migrant      workers 10
+## 7          local  authorities  9
+## 8    sustainable  development  9
+## 9          basic     services  8
+## 10    actionable  commitments  7
+## 11          best    practices  7
+## 12       private       sector  7
+## 13       regular    migration  7
+## 14          best    interests  6
+## 15        decent         work  6
+## 16      regional       levels  6
+## 17      relevant stakeholders  6
+## 18        Global        Forum  5
+## 19         human          law  5
+## 20       migrant     children  5
+## 21       Regular    Migration  5
+## 22        social entitlements  5
+## 23        social     services  5</code></pre>
+<pre class="r"><code>print.data.frame(cnlp_get_dependency(obj, get_token = TRUE) %&gt;%
+  filter(relation == &quot;dobj&quot;) %&gt;%
+  select(id = id, start = lemma, word = word_target) %&gt;%
+  filter(!(word %in% c(&quot;c&quot;,&quot;b&quot;,&quot;a&quot;))) %&gt;%
+  select(start, word) %&gt;%
+  group_by(start, word) %&gt;%
+  summarise(n = n()) %&gt;%
+  filter(n &gt;= 5) %&gt;%
+  arrange(desc(n)))</code></pre>
+<pre><code>##         start               word  n
+## 1     provide             access 10
+## 2     promote operationalization  9
+## 3     provide        information  7
+## 4   establish         mechanisms  6
+## 5      create         conditions  5
+## 6     develop         agreements  5
+## 7     enhance        cooperation  5
+## 8  facilitate             access  5
+## 9     provide           migrants  5
+## 10       take              place  5</code></pre>
 
 
 
