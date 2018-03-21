@@ -130,109 +130,270 @@ $(document).ready(function () {
 library(tidytext)
 library(readtext)
 library(cleanNLP)
-text &lt;- readtext(&quot;output2.txt&quot;)</code></pre>
-<pre class="r"><code>cnlp_init_corenlp()
+text &lt;- readtext(&quot;output3.txt&quot;)</code></pre>
+<pre class="r"><code>cnlp_init_corenlp(anno_level = 2)
 obj &lt;- cnlp_annotate(text, as_strings = TRUE, backend = &quot;coreNLP&quot;)
-cnlp_get_token(obj)</code></pre>
-<pre><code>## # A tibble: 12,484 x 8
-##             id   sid   tid      word     lemma  upos   pos   cid
-##          &lt;chr&gt; &lt;int&gt; &lt;int&gt;     &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;int&gt;
-##  1 output2.txt     1     1    GLOBAL    global   ADJ    JJ     0
-##  2 output2.txt     1     2   COMPACT   COMPACT  NOUN   NNP     7
-##  3 output2.txt     1     3       FOR       for   ADP    IN    15
-##  4 output2.txt     1     4      SAFE      SAFE  NOUN   NNP    19
-##  5 output2.txt     1     5         ,         ,     .     ,    23
-##  6 output2.txt     1     6   ORDERLY   ORDERLY  NOUN   NNP    25
-##  7 output2.txt     1     7       AND       and  CONJ    CC    33
-##  8 output2.txt     1     8   REGULAR   REGULAR  NOUN   NNP    37
-##  9 output2.txt     1     9 MIGRATION MIGRATION  NOUN   NNP    46
-## 10 output2.txt     1    10      ZERO      ZERO  NOUN   NNP    57
-## # ... with 12,474 more rows</code></pre>
-<pre class="r"><code>print.data.frame(cnlp_get_dependency(obj, get_token = TRUE) %&gt;%
-  filter(relation == &quot;amod&quot;) %&gt;%
-  select(id = id, word = lemma, target = lemma_target) %&gt;%
-  select(target, word) %&gt;%
-  group_by(target, word) %&gt;%
+tokens &lt;- cnlp_get_token(obj)</code></pre>
+<p>First let’s see what are the most common adjectives and nouns in the text.</p>
+<pre class="r"><code>cnlp_get_token(obj) %&gt;%
+  filter(upos == &quot;ADJ&quot;) %&gt;%
+  group_by(lemma) %&gt;%
   summarise(n = n()) %&gt;%
-  filter(n &gt;= 5) %&gt;%
-  arrange(desc(n)))</code></pre>
+  filter(n &gt; 10) %&gt;%
+  arrange(desc(n))</code></pre>
 <pre><code>## Warning: package 'bindrcpp' was built under R version 3.4.2</code></pre>
-<pre><code>##           target        word  n
-## 1         global     compact 33
-## 2         follow      action 22
-## 3  international   migration 17
-## 4          human      rights 14
-## 5        regular   migration 12
-## 6        migrant      worker 11
-## 7  international         law 10
-## 8    sustainable development 10
-## 9          local   authority  9
-## 10         basic     service  8
-## 11    actionable  commitment  7
-## 12          best    practice  7
-## 13       private      sector  7
-## 14          best    interest  6
-## 15        decent        work  6
-## 16      regional       level  6
-## 17      relevant stakeholder  6
-## 18        global       Forum  5
-## 19        global       level  5
-## 20         human         law  5
-## 21       migrant       child  5
-## 22        social entitlement  5
-## 23        social     service  5</code></pre>
-<pre class="r"><code>print.data.frame(cnlp_get_dependency(obj, get_token = TRUE) %&gt;%
-  filter(relation == &quot;amod&quot;) %&gt;%
-  select(id = id, word = word, target = word_target) %&gt;%
-  select(target, word) %&gt;%
-  group_by(target, word) %&gt;%
+<pre><code>## # A tibble: 25 x 2
+##            lemma     n
+##            &lt;chr&gt; &lt;int&gt;
+##  1        global    64
+##  2 international    58
+##  3         human    41
+##  4        social    36
+##  5       migrant    32
+##  6      national    28
+##  7         other    27
+##  8      relevant    26
+##  9      consular    24
+## 10         local    24
+## # ... with 15 more rows</code></pre>
+<pre class="r"><code>cnlp_get_token(obj) %&gt;%
+  filter(upos == &quot;NOUN&quot;) %&gt;%
+  group_by(lemma) %&gt;%
   summarise(n = n()) %&gt;%
-  filter(n &gt;= 5) %&gt;%
+  filter(n &gt; 10) %&gt;%
+  arrange(desc(n))</code></pre>
+<pre><code>## # A tibble: 85 x 2
+##         lemma     n
+##         &lt;chr&gt; &lt;int&gt;
+##  1    migrant   138
+##  2  migration   120
+##  3    country    46
+##  4 protection    43
+##  5     access    40
+##  6      skill    39
+##  7     rights    38
+##  8    compact    35
+##  9     labour    35
+## 10     policy    35
+## # ... with 75 more rows</code></pre>
+<p>Let’s get an overview of compound nouns in the text.</p>
+<pre class="r"><code>comp &lt;- cnlp_get_dependency(obj, get_token = TRUE) %&gt;%
+  filter(relation == &quot;compound&quot;) %&gt;%
+  group_by(sid, tid) %&gt;%
+  mutate(comp_word = paste(paste0(word_target, collapse=&quot; &quot;),word)) %&gt;%
+  select(sid, tid, tid_target, comp_word) %&gt;%
+  group_by(comp_word) %&gt;%
+  summarise(n = n()) %&gt;%
+  arrange(desc(n)) %&gt;%
+  setNames(paste0('comp.', names(.)))
+  
+comp</code></pre>
+<pre><code>## # A tibble: 447 x 2
+##                          comp.comp_word comp.n
+##                                   &lt;chr&gt;  &lt;int&gt;
+##  1   National Human Rights Institutions     18
+##  2 International Migration Review Forum     15
+##  3                United Nations system     10
+##  4            Addis Ababa Action Agenda      9
+##  5                        Member States      9
+##  6                     migration status      9
+##  7      Regional Migration Review Forum      9
+##  8                 New York Declaration      8
+##  9                        skills levels      7
+## 10                   skills development      6
+## # ... with 437 more rows</code></pre>
+<p>As in the case of compound words by default the adjectival modifiers are only counted for one part of the compound we create a correction table by connection modifiers to the other parts of the compound words. Therefore creating the <strong>corr_amod</strong> dataset.</p>
+<pre class="r"><code>amod &lt;- cnlp_get_dependency(obj, get_token = TRUE) %&gt;%
+  filter(relation == &quot;amod&quot;) %&gt;%
+  select(sid, tid, tid_target, relation, word_target, lemma_target) %&gt;%
+  setNames(paste0('amod.', names(.)))
+
+amod</code></pre>
+<pre><code>## # A tibble: 1,358 x 6
+##    amod.sid amod.tid amod.tid_target amod.relation amod.word_target
+##       &lt;int&gt;    &lt;int&gt;           &lt;int&gt;         &lt;chr&gt;            &lt;chr&gt;
+##  1        1       11              10          amod             High
+##  2        1       36              35          amod        important
+##  3        1       39              38          amod         enhanced
+##  4        1       42              41          amod    international
+##  5        1       52              51          amod           Global
+##  6        1       59              58          amod          Regular
+##  7        2        4               3          amod           Global
+##  8        2       29              25          amod             core
+##  9        2       29              26          amod    international
+## 10        2       29              27          amod            human
+## # ... with 1,348 more rows, and 1 more variables: amod.lemma_target &lt;chr&gt;</code></pre>
+<pre class="r"><code>corr_amod &lt;- cnlp_get_dependency(obj, get_token = TRUE) %&gt;%
+  filter(relation == &quot;compound&quot;) %&gt;%
+  right_join(amod, c(&quot;sid&quot; = &quot;amod.sid&quot;, &quot;tid&quot; = &quot;amod.tid&quot;)) %&gt;%
+  filter(!is.na(relation)) %&gt;%
+  mutate(tid = tid_target, tid_target = amod.tid_target,
+         relation = amod.relation, word = word_target,
+         lemma = lemma_target, word_target = amod.word_target,
+         lemma_target = amod.lemma_target) %&gt;%
+  select(sid, tid, tid_target, relation, word, lemma, word_target, lemma_target)
+
+
+corr_amod &lt;- cnlp_get_dependency(obj, get_token = TRUE) %&gt;%
+  select(sid, tid, tid_target, relation, word, lemma, word_target, lemma_target) %&gt;%
+  bind_rows(corr_amod)
+  
+corr_amod</code></pre>
+<pre><code>## # A tibble: 13,674 x 8
+##      sid   tid tid_target relation    word   lemma word_target
+##    &lt;int&gt; &lt;int&gt;      &lt;int&gt;    &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;       &lt;chr&gt;
+##  1     1     0         13     root    ROOT    ROOT     meeting
+##  2     1    13          1    nsubj meeting meeting          We
+##  3     1     1          2    punct      We      we           ,
+##  4     1     4          3      det   Heads    head         the
+##  5     1     1          4    appos      We      we       Heads
+##  6     1     6          5     case   State   state          of
+##  7     1     4          6     nmod   Heads    head       State
+##  8     1     6          7       cc   State   state         and
+##  9     1     4          8     nmod   Heads    head  Government
+## 10     1     6          8     conj   State   state  Government
+## # ... with 13,664 more rows, and 1 more variables: lemma_target &lt;chr&gt;</code></pre>
+<p>First we look for adjectival modifier and compound relations and we summarise the results by looking at the words’ lemmas and the count of the connections.</p>
+<pre class="r"><code>print.data.frame(corr_amod %&gt;%
+  filter(relation %in% c(&quot;amod&quot;,&quot;compound&quot;)) %&gt;%
+  select(word = lemma, target = lemma_target, relation) %&gt;%
+  group_by(target, word, relation) %&gt;%
+  summarise(n = n()) %&gt;%
+  filter(n &gt; 5) %&gt;%
   arrange(desc(n)))</code></pre>
-<pre><code>##           target         word  n
-## 1         Global      Compact 34
-## 2      following      actions 22
-## 3  international    migration 17
-## 4          human       rights 11
-## 5  international          law 10
-## 6        migrant      workers 10
-## 7          local  authorities  9
-## 8    sustainable  development  9
-## 9          basic     services  8
-## 10    actionable  commitments  7
-## 11          best    practices  7
-## 12       private       sector  7
-## 13       regular    migration  7
-## 14          best    interests  6
-## 15        decent         work  6
-## 16      regional       levels  6
-## 17      relevant stakeholders  6
-## 18        Global        Forum  5
-## 19         human          law  5
-## 20       migrant     children  5
-## 21       Regular    Migration  5
-## 22        social entitlements  5
-## 23        social     services  5</code></pre>
+<pre><code>##           target         word relation  n
+## 1         global      compact     amod 35
+## 2          human       rights     amod 27
+## 3         follow       action     amod 22
+## 4  international    migration     amod 17
+## 5  international          law     amod 12
+## 6        regular    migration     amod 12
+## 7        migrant       worker     amod 11
+## 8    sustainable  development     amod 10
+## 9         decent         work     amod  9
+## 10         local    authority     amod  9
+## 11        Member       States compound  9
+## 12     migration       status compound  9
+## 13    actionable   commitment     amod  8
+## 14         basic      service     amod  8
+## 15     Migration        Forum compound  8
+## 16      relevant  stakeholder     amod  8
+## 17        Review        Forum compound  8
+## 18        social     security     amod  8
+## 19          best     practice     amod  7
+## 20       private       sector     amod  7
+## 21      regional        level     amod  7
+## 22         skill        level compound  7
+## 23        social   protection     amod  7
+## 24          best     interest     amod  6
+## 25         Human Institutions compound  6
+## 26 international       rights     amod  6
+## 27        labour       market compound  6
+## 28     migration       policy compound  6
+## 29      National Institutions compound  6
+## 30        Rights Institutions compound  6
+## 31       service     provider compound  6
+## 32         skill  development compound  6
+## 33        travel     document compound  6</code></pre>
+<pre class="r"><code>print.data.frame(cnlp_get_dependency(obj, get_token = T) %&gt;%
+  filter(relation %in% c(&quot;amod&quot;,&quot;compound&quot;)) %&gt;%
+  select(word = lemma, target = lemma_target, relation) %&gt;%
+  group_by(target, word, relation) %&gt;%
+  summarise(n = n()) %&gt;%
+  filter(n &gt; 5) %&gt;%
+  arrange(desc(n)))</code></pre>
+<pre><code>##           target         word relation  n
+## 1         global      compact     amod 34
+## 2         follow       action     amod 22
+## 3          human       rights     amod 17
+## 4  international    migration     amod 17
+## 5  international          law     amod 12
+## 6        migrant       worker     amod 11
+## 7        regular    migration     amod 11
+## 8          local    authority     amod  9
+## 9         Member       States compound  9
+## 10     migration       status compound  9
+## 11   sustainable  development     amod  9
+## 12    actionable   commitment     amod  8
+## 13         basic      service     amod  8
+## 14     Migration        Forum compound  8
+## 15      relevant  stakeholder     amod  8
+## 16        Review        Forum compound  8
+## 17          best     practice     amod  7
+## 18       private       sector     amod  7
+## 19      regional        level     amod  7
+## 20         skill        level compound  7
+## 21          best     interest     amod  6
+## 22        decent         work     amod  6
+## 23         Human Institutions compound  6
+## 24        labour       market compound  6
+## 25     migration       policy compound  6
+## 26      National Institutions compound  6
+## 27        Rights Institutions compound  6
+## 28       service     provider compound  6
+## 29         skill  development compound  6
+## 30        travel     document compound  6</code></pre>
+<pre class="r"><code>print.data.frame(corr_amod %&gt;%
+  filter(relation %in% c(&quot;amod&quot;,&quot;compound&quot;)) %&gt;%
+  select(word = word, target = word_target, relation) %&gt;%
+  group_by(target, word, relation) %&gt;%
+  summarise(n = n()) %&gt;%
+  filter(n &gt; 5) %&gt;%
+  arrange(desc(n)))</code></pre>
+<pre><code>##           target         word relation  n
+## 1         Global      Compact     amod 36
+## 2          human       rights     amod 25
+## 3      following      actions     amod 22
+## 4  international    migration     amod 17
+## 5  international          law     amod 12
+## 6        migrant      workers     amod 10
+## 7         decent         work     amod  9
+## 8          local  authorities     amod  9
+## 9         Member       States compound  9
+## 10     migration       status compound  9
+## 11   sustainable  development     amod  9
+## 12         basic     services     amod  8
+## 13     Migration        Forum compound  8
+## 14       regular    migration     amod  8
+## 15      relevant stakeholders     amod  8
+## 16        Review        Forum compound  8
+## 17        social     security     amod  8
+## 18    actionable  commitments     amod  7
+## 19          best    practices     amod  7
+## 20       private       sector     amod  7
+## 21        skills       levels compound  7
+## 22        social   protection     amod  7
+## 23          best    interests     amod  6
+## 24         Human Institutions compound  6
+## 25 international       rights     amod  6
+## 26      National Institutions compound  6
+## 27      regional       levels     amod  6
+## 28        Rights Institutions compound  6
+## 29       service    providers compound  6
+## 30        skills  development compound  6
+## 31        travel    documents compound  6</code></pre>
+<p>Direct object relations usually extract meaning of the overall text.</p>
 <pre class="r"><code>print.data.frame(cnlp_get_dependency(obj, get_token = TRUE) %&gt;%
   filter(relation == &quot;dobj&quot;) %&gt;%
-  select(id = id, start = lemma, word = word_target) %&gt;%
-  filter(!(word %in% c(&quot;c&quot;,&quot;b&quot;,&quot;a&quot;))) %&gt;%
-  select(start, word) %&gt;%
+  select(start = lemma, word = word_target) %&gt;%
   group_by(start, word) %&gt;%
   summarise(n = n()) %&gt;%
   filter(n &gt;= 5) %&gt;%
   arrange(desc(n)))</code></pre>
 <pre><code>##         start               word  n
-## 1     provide             access 10
-## 2     promote operationalization  9
+## 1     promote operationalization 10
+## 2     provide             access 10
 ## 3     provide        information  7
-## 4   establish         mechanisms  6
-## 5      create         conditions  5
-## 6     develop         agreements  5
-## 7     enhance        cooperation  5
-## 8  facilitate             access  5
-## 9     provide           migrants  5
-## 10       take              place  5</code></pre>
+## 4     enhance        cooperation  6
+## 5   establish         mechanisms  6
+## 6  facilitate             access  6
+## 7     provide            support  6
+## 8      create         conditions  5
+## 9     develop         agreements  5
+## 10    empower           migrants  5
+## 11    provide         assistance  5
+## 12    provide           migrants  5
+## 13       take              place  5</code></pre>
 
 
 
