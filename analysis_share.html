@@ -156,26 +156,49 @@ tokens &lt;- cnlp_get_token(obj)</code></pre>
 ##  9      consular    24
 ## 10         local    24
 ## # ... with 15 more rows</code></pre>
-<pre class="r"><code>cnlp_get_token(obj) %&gt;%
+<pre class="r"><code>print.data.frame(cnlp_get_token(obj) %&gt;%
   filter(upos == &quot;NOUN&quot;) %&gt;%
   group_by(lemma) %&gt;%
   summarise(n = n()) %&gt;%
-  filter(n &gt; 10) %&gt;%
-  arrange(desc(n))</code></pre>
-<pre><code>## # A tibble: 85 x 2
-##         lemma     n
-##         &lt;chr&gt; &lt;int&gt;
-##  1    migrant   138
-##  2  migration   120
-##  3    country    46
-##  4 protection    43
-##  5     access    40
-##  6      skill    39
-##  7     rights    38
-##  8    compact    35
-##  9     labour    35
-## 10     policy    35
-## # ... with 75 more rows</code></pre>
+  filter(n &gt; 20) %&gt;%
+  arrange(desc(n)))</code></pre>
+<pre><code>##          lemma   n
+## 1      migrant 138
+## 2    migration 120
+## 3      country  46
+## 4   protection  43
+## 5       access  40
+## 6        skill  39
+## 7       rights  38
+## 8      compact  35
+## 9       labour  35
+## 10      policy  35
+## 11     service  33
+## 12 development  31
+## 13 information  31
+## 14       order  31
+## 15  assistance  30
+## 16       child  30
+## 17      person  30
+## 18       datum  29
+## 19   mechanism  28
+## 20 cooperation  27
+## 21         law  26
+## 22      origin  26
+## 23      regard  26
+## 24        work  26
+## 25      action  25
+## 26      status  25
+## 27       level  24
+## 28      States  24
+## 29   programme  23
+## 30  remittance  22
+## 31   authority  21
+## 32   community  21
+## 33     Nations  21
+## 34     society  21
+## 35 trafficking  21
+## 36      United  21</code></pre>
 <p>Let’s get an overview of compound nouns in the text.</p>
 <pre class="r"><code>comp &lt;- cnlp_get_dependency(obj, get_token = TRUE) %&gt;%
   filter(relation == &quot;compound&quot;) %&gt;%
